@@ -25,6 +25,8 @@ RUN apt-get update \
 USER node
 WORKDIR /app
 COPY --from=packages --chown=node:node /app .
+# Crear la carpeta como "node" ANTES de montar la caché: si no, Docker crea los directorios
+# padre como root y yarn no puede escribir en ~/.yarn/berry (EACCES al crear "index").
 RUN mkdir -p /home/node/.yarn/berry
 RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000,gid=1000 \
     yarn install --immutable
@@ -52,6 +54,11 @@ RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
 # ---- 4) final: solo lo necesario para ejecutar ----
 FROM ${NODE_IMAGE}
 ENV NODE_ENV=production
+# La imagen base trae npm y corepack con sus propias dependencias empaquetadas (brace-expansion,
+# undici...) que Trivy escanea y que no controlamos. El contenedor solo ejecuta "node", así que se
+# eliminan: menos superficie de ataque y los hallazgos no dependen de la versión de la imagen base.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 USER node
 WORKDIR /app
 COPY --from=deps --chown=node:node /app .
