@@ -25,6 +25,7 @@ RUN apt-get update \
 USER node
 WORKDIR /app
 COPY --from=packages --chown=node:node /app .
+RUN mkdir -p /home/node/.yarn/berry
 RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000,gid=1000 \
     yarn install --immutable
 COPY --chown=node:node . .
@@ -42,6 +43,7 @@ COPY --chown=node:node .yarn ./.yarn
 COPY --chown=node:node .yarnrc.yml backstage.json ./
 COPY --from=build --chown=node:node /app/yarn.lock /app/package.json /app/packages/backend/dist/skeleton.tar.gz ./
 RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
+RUN mkdir -p /home/node/.yarn/berry
 RUN --mount=type=cache,target=/home/node/.yarn/berry/cache,uid=1000,gid=1000 \
     yarn workspaces focus --all --production
 COPY --from=build --chown=node:node /app/packages/backend/dist/bundle.tar.gz ./
