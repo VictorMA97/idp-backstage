@@ -10,6 +10,11 @@ backend:
   listen: ':7007'
   cors:
     origin: ${APP_BASE_URL}
+  csp:
+    # El portal se sirve por HTTP (laboratorio local). Con la directiva por defecto el navegador
+    # reescribiría a HTTPS todos los ficheros JS/CSS y la página quedaría en blanco.
+    # Si algún día pones HTTPS delante (cert-manager + Traefik), elimina esta línea.
+    upgrade-insecure-requests: false
   # Clave compartida entre los plugins del backend (autenticación servicio a servicio)
   auth:
     externalAccess:
