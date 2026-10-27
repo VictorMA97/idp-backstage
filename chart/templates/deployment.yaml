@@ -20,6 +20,28 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        # Backstage no reintenta si la base de datos aún no existe. Espera aquí a que PostgreSQL
+        # responda; el Service de PostgreSQL es headless y su nombre DNS solo resuelve cuando el pod
+        # está Ready, así que sin esta espera un arranque en frío falla con ENOTFOUND.
+        - name: wait-for-postgres
+          image: {{ .Values.postgres.image | quote }}
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h backstage-postgres -p 5432 -U backstage; do
+                echo "esperando a PostgreSQL..."; sleep 2
+              done
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
       containers:
         - name: backstage
           image: {{ include "backstage.image" . | quote }}
@@ -45,8 +67,10 @@ spec:
             {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
+          # Debe usar readiness, no liveness: liveness responde 200 aunque el backend haya fallado al
+          # arrancar. Con readiness, si en 3 minutos no está listo, Kubernetes reinicia el contenedor.
           startupProbe:
-            httpGet: { path: /.backstage/health/v1/liveness, port: http }
+            httpGet: { path: /.backstage/health/v1/readiness, port: http }
             periodSeconds: 5
             failureThreshold: 36
           readinessProbe:
