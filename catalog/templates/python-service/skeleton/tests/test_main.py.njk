@@ -1,0 +1,41 @@
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_root_devuelve_metadatos():
+    r = client.get("/")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["service"] == "${{ values.name }}"
+    assert {"version", "env"} <= body.keys()
+
+
+def test_healthz_ok():
+    r = client.get("/healthz")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
+
+def test_version():
+    r = client.get("/version")
+    assert r.status_code == 200
+    assert "version" in r.json()
+
+
+def test_metrics_expone_contadores():
+    client.get("/healthz")
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert "http_requests_total" in r.text
+    assert 'path="/healthz"' in r.text
+
+
+def test_ruta_inexistente_no_dispara_cardinalidad():
+    client.get("/no-existe-123")
+    client.get("/no-existe-456")
+    metrics = client.get("/metrics").text
+    assert "no-existe" not in metrics
+    assert 'path="unmatched"' in metrics

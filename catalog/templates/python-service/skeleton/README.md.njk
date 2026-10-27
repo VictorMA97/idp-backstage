@@ -1,0 +1,39 @@
+# ${{ values.name }}
+
+${{ values.description }}
+
+Servicio generado con la plantilla **python-service** de la plataforma `idp-platform`
+(FastAPI, pipeline firmado, chart de Helm y despliegue por GitOps).
+
+```
+push a main -> tests + lint del chart -> build -> Trivy -> GHCR -> SBOM -> firma Cosign (keyless)
+            -> commit del digest en chart/values-dev.yaml -> Argo CD despliega en dev
+manual:  promote-to-prod -> verifica firma y SBOM -> commit en chart/values-prod.yaml -> Argo CD despliega en prod
+```
+
+## URLs
+
+- dev: <http://${{ values.shortName }}.dev.localtest.me:8081>
+- prod: <http://${{ values.shortName }}.prod.localtest.me:8082>
+
+## Pendiente tras crear el servicio (una sola vez)
+
+1. Esperar a que el workflow `ci` termine en verde: publica la primera imagen en GHCR.
+2. Hacer público el paquete: tu perfil -> *Packages* -> `${{ values.name }}` -> *Package settings* ->
+   **Change visibility -> Public**. Sin esto, el clúster no puede descargar la imagen.
+3. Aceptar el pull request que registra el servicio en `idp-platform`. Hasta entonces no se despliega.
+4. Opcional: *Settings -> Environments -> production* con **Required reviewers**, para proteger la promoción.
+
+## Desarrollo local
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m pytest -q
+uvicorn app.main:app --reload --port 8080
+```
+
+## Importante
+
+Kyverno solo admite en el clúster imágenes firmadas por el workflow `ci.yaml` de este repositorio.
+No cambies el nombre del fichero ni del workflow, ni publiques imágenes a mano.

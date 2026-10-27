@@ -194,6 +194,10 @@ catalog:
         - allow: [User, Group]
     - type: file
       target: ../../catalog/entities.yaml
+    - type: file
+      target: ../../catalog/templates/python-service/template.yaml
+      rules:
+        - allow: [Template]
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options

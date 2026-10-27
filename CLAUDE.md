@@ -19,3 +19,10 @@ Se despliega en el clúster `mgmt` (no en dev/prod) por Argo CD desde el repo `i
 ## Estado
 Compila y arranca contra PostgreSQL en pruebas locales. **La imagen y el despliegue en el clúster aún
 no se han ejecutado en el entorno real.**
+
+## Plantillas
+- `catalog/templates/python-service`: golden path. Solo se renderizan los `.njk` (`templateFileExtension: true`);
+  el resto se copia tal cual porque los workflows y charts usan `${{ }}`/`{{ }}`.
+- Texto libre del usuario siempre con `| dump` (YAML/Python). Los repos deben llamarse `svc-*` (lo exige Kyverno).
+- La plantilla va dentro de la imagen: cambiarla exige un build.
+

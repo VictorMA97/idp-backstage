@@ -52,3 +52,8 @@ catalog:
         - allow: [User, Group]
     - type: file
       target: ./catalog/entities.yaml
+    # Plantillas del scaffolder (golden path)
+    - type: file
+      target: ./catalog/templates/python-service/template.yaml
+      rules:
+        - allow: [Template]

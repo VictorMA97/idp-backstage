@@ -1,0 +1,60 @@
+"""Servicio generado con la plantilla python-service de la plataforma.
+
+Expone lo mínimo que una plataforma espera de cualquier servicio:
+health checks, versión y métricas Prometheus.
+"""
+import os
+import time
+
+from fastapi import FastAPI, Request, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+
+APP_VERSION = os.getenv("APP_VERSION", "dev")
+APP_ENV = os.getenv("APP_ENV", "local")
+DESCRIPTION = ${{ values.description | dump }}
+
+app = FastAPI(title="${{ values.name }}", description=DESCRIPTION, version=APP_VERSION)
+
+REQUESTS = Counter(
+    "http_requests_total",
+    "Peticiones HTTP recibidas",
+    ["method", "path", "status"],
+)
+LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "Latencia de las peticiones HTTP",
+    ["method", "path"],
+)
+
+
+@app.middleware("http")
+async def record_metrics(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    # Se usa la ruta declarada (no la URL real) para no disparar la cardinalidad
+    route = request.scope.get("route")
+    path = route.path if route else "unmatched"
+    REQUESTS.labels(request.method, path, str(response.status_code)).inc()
+    LATENCY.labels(request.method, path).observe(elapsed)
+    return response
+
+
+@app.get("/")
+def root() -> dict:
+    return {"service": "${{ values.name }}", "version": APP_VERSION, "env": APP_ENV}
+
+
+@app.get("/healthz")
+def healthz() -> dict:
+    return {"status": "ok"}
+
+
+@app.get("/version")
+def version() -> dict:
+    return {"version": APP_VERSION}
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)

@@ -1,0 +1,55 @@
+replicaCount: 1
+
+image:
+  # El pipeline de CI reescribe repository, tag y digest en values-dev.yaml / values-prod.yaml
+  repository: ghcr.io/${{ values.owner | lower }}/${{ values.name }}
+  tag: ""
+  # Si se informa, la imagen se referencia por digest (inmutable) además del tag
+  digest: ""
+  pullPolicy: IfNotPresent
+
+env: local
+
+service:
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: traefik
+  host: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+# Cumple el perfil "restricted" de Pod Security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# El namespace nace con deny-by-default; esto abre solo lo necesario hacia la app
+networkPolicy:
+  enabled: true
+  # Namespace del controlador de ingress (Traefik en k3s vive en kube-system)
+  ingressNamespace: kube-system
+  # Namespace desde el que se scrapean métricas (se usará en la fase de observabilidad)
+  monitoringNamespace: monitoring
+
+# Requiere los CRDs de Prometheus Operator (fase de observabilidad)
+serviceMonitor:
+  enabled: false
+  interval: 30s

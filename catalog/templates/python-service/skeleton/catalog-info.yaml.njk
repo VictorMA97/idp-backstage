@@ -1,0 +1,20 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.description | dump }}
+  annotations:
+    github.com/project-slug: ${{ values.owner }}/${{ values.name }}
+  links:
+    - url: http://${{ values.shortName }}.dev.localtest.me:8081
+      title: dev
+    - url: http://${{ values.shortName }}.prod.localtest.me:8082
+      title: prod
+  tags:
+    - python
+    - golden-path
+spec:
+  type: service
+  lifecycle: experimental
+  owner: ${{ values.teamOwner }}
+  system: idp

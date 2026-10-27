@@ -1,0 +1,151 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: python-service
+  title: Servicio Python (golden path)
+  description: >-
+    Crea un servicio FastAPI listo para producción: repositorio en GitHub, pipeline de CI/CD
+    (tests, Trivy, SBOM, firma Cosign), chart de Helm y despliegue en dev y prod por GitOps.
+  tags:
+    - python
+    - fastapi
+    - golden-path
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Datos del servicio
+      required:
+        - repoUrl
+        - description
+        - owner
+      properties:
+        repoUrl:
+          title: Repositorio
+          type: string
+          description: >-
+            Elige el nombre del repositorio. Tiene que empezar por "svc-" (por ejemplo svc-pagos):
+            Kyverno solo admite en el clúster imágenes de repositorios con ese prefijo.
+          # El valor tiene la forma "github.com?owner=<dueño>&repo=<repo>"
+          pattern: '[?&]repo=svc-[a-z0-9]([a-z0-9-]{0,38}[a-z0-9])?(&|$)'
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - VictorMA97
+            # Se usa TU token de GitHub (no uno guardado en el clúster). Backstage te pedirá
+            # autorizar estos permisos la primera vez.
+            requestUserCredentials:
+              secretsKey: USER_OAUTH_TOKEN
+              additionalScopes:
+                github:
+                  - public_repo
+                  - workflow
+        description:
+          title: Descripción
+          type: string
+          description: Qué hace el servicio, en una frase.
+          maxLength: 200
+        owner:
+          title: Equipo propietario
+          type: string
+          description: Grupo del catálogo responsable del servicio.
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: Group
+
+  steps:
+    - id: fetch-service
+      name: Generar el código del servicio
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ./service
+        # Solo se procesan los ficheros .njk. El resto (workflows de GitHub Actions, plantillas
+        # de Helm...) se copia tal cual, porque también usan llaves dobles.
+        templateFileExtension: true
+        values:
+          name: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
+          shortName: ${{ (parameters.repoUrl | parseRepoUrl).repo | replace('svc-', '', 1) }}
+          owner: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
+          description: ${{ parameters.description }}
+          teamOwner: ${{ parameters.owner }}
+
+    - id: publish
+      name: Crear el repositorio en GitHub
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        description: ${{ parameters.description }}
+        repoVisibility: public
+        defaultBranch: main
+        sourcePath: ./service
+        topics:
+          - idp-service
+          - python
+          - golden-path
+        # Sin protección de rama: el job deploy-dev del CI escribe el digest directamente en main
+        # (en cuentas personales de GitHub la protección no permite excepciones para el bot).
+        protectDefaultBranch: false
+        gitCommitMessage: 'feat: servicio generado con la plantilla python-service'
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+
+    - id: fetch-platform-entry
+      name: Preparar el registro en la plataforma
+      action: fetch:template
+      input:
+        url: ./platform-entry
+        targetPath: ./platform-entry
+        templateFileExtension: true
+        values:
+          name: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
+          owner: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
+
+    - id: register-in-platform
+      name: Abrir pull request en idp-platform
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=${{ (parameters.repoUrl | parseRepoUrl).owner }}&repo=idp-platform
+        branchName: add-${{ (parameters.repoUrl | parseRepoUrl).repo }}
+        title: 'Registrar el servicio ${{ (parameters.repoUrl | parseRepoUrl).repo }}'
+        description: |
+          Registra el servicio **${{ (parameters.repoUrl | parseRepoUrl).repo }}** en la plataforma.
+
+          Al aceptar este PR, el ApplicationSet `services` creará `${{ (parameters.repoUrl | parseRepoUrl).repo }}-dev`
+          y `${{ (parameters.repoUrl | parseRepoUrl).repo }}-prod` en Argo CD.
+
+          Antes de aceptarlo, comprueba que el workflow `ci` del repositorio del servicio ha terminado
+          en verde y que has hecho público su paquete en GHCR.
+
+          Generado con la plantilla `python-service` de Backstage.
+        sourcePath: ./platform-entry
+        update: true
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+
+    - id: register
+      name: Registrar el componente en el catálogo
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Repositorio del servicio
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Pull request en idp-platform
+        url: ${{ steps['register-in-platform'].output.remoteUrl }}
+      - title: Abrir en el catálogo
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
+    text:
+      - title: Siguientes pasos
+        content: |
+          1. Espera a que el workflow **ci** del nuevo repositorio termine en verde (publica la primera imagen).
+          2. En GitHub: tu perfil, *Packages*, el paquete del servicio, *Package settings*, **Change visibility: Public**.
+             Sin esto el clúster no puede descargar la imagen.
+          3. Acepta el **pull request en idp-platform** (enlace arriba). Hasta entonces el servicio no se despliega.
+          4. Opcional: en el repo del servicio, *Settings, Environments, production* con revisores obligatorios.
