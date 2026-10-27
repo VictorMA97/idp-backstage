@@ -1,0 +1,72 @@
+# Inventario de la plataforma. Backstage lee este fichero al arrancar (va dentro de la imagen).
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: idp
+  description: Internal Developer Platform (proyecto de portafolio)
+spec:
+  owner: platform-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: idp-platform
+  description: Infraestructura como código de la plataforma (k3d, Argo CD, Kyverno, políticas)
+  annotations:
+    github.com/project-slug: VictorMA97/idp-platform
+  links:
+    - url: https://github.com/VictorMA97/idp-platform
+      title: Repositorio
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: idp
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: idp-backstage
+  description: Este portal (Backstage)
+  annotations:
+    github.com/project-slug: VictorMA97/idp-backstage
+  links:
+    - url: https://github.com/VictorMA97/idp-backstage
+      title: Repositorio
+spec:
+  type: website
+  lifecycle: production
+  owner: platform-team
+  system: idp
+  dependsOn:
+    - resource:idp-backstage-db
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: idp-backstage-db
+  description: PostgreSQL del portal
+spec:
+  type: database
+  owner: platform-team
+  system: idp
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: idp-sample-app
+  description: Servicio de ejemplo (golden path en Python) desplegado en dev y prod
+  annotations:
+    github.com/project-slug: VictorMA97/idp-sample-app
+  links:
+    - url: https://github.com/VictorMA97/idp-sample-app
+      title: Repositorio
+    - url: http://sample-app.dev.localtest.me:8081
+      title: dev
+    - url: http://sample-app.prod.localtest.me:8082
+      title: prod
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: idp

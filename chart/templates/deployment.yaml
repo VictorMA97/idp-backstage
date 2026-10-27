@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage
+  labels:
+    app.kubernetes.io/name: backstage
+    {{- include "backstage.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backstage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backstage
+        {{- include "backstage.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: backstage
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: backstage
+          image: {{ include "backstage.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 7007
+          env:
+            - name: APP_BASE_URL
+              value: {{ .Values.baseUrl | quote }}
+            - name: POSTGRES_HOST
+              value: backstage-postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: backstage
+            {{- range $k := list "POSTGRES_PASSWORD" "BACKEND_SECRET" "AUTH_GITHUB_CLIENT_ID" "AUTH_GITHUB_CLIENT_SECRET" "GITHUB_TOKEN" }}
+            - name: {{ $k }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretName }}
+                  key: {{ $k }}
+            {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          startupProbe:
+            httpGet: { path: /.backstage/health/v1/liveness, port: http }
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet: { path: /.backstage/health/v1/readiness, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /.backstage/health/v1/liveness, port: http }
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            # Con el sistema de ficheros en solo lectura, Backstage escribe aquí (scaffolder, caché)
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi

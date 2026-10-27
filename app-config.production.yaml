@@ -1,0 +1,49 @@
+# Configuración de producción. Se carga encima de app-config.yaml (ver CMD del Dockerfile).
+# TODO lo sensible llega por variables de entorno desde un Secret de Kubernetes
+# (ver docs/backstage.md en idp-platform); aquí no hay ningún valor secreto.
+app:
+  # URL pública del portal, por ejemplo http://backstage.localtest.me:8080
+  baseUrl: ${APP_BASE_URL}
+
+backend:
+  baseUrl: ${APP_BASE_URL}
+  listen: ':7007'
+  cors:
+    origin: ${APP_BASE_URL}
+  # Clave compartida entre los plugins del backend (autenticación servicio a servicio)
+  auth:
+    externalAccess:
+      - type: legacy
+        options:
+          secret: ${BACKEND_SECRET}
+          subject: idp-backend
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+
+auth:
+  environment: production
+  providers:
+    github:
+      production:
+        clientId: ${AUTH_GITHUB_CLIENT_ID}
+        clientSecret: ${AUTH_GITHUB_CLIENT_SECRET}
+        signIn:
+          resolvers:
+            # Solo entra quien tenga un User en el catálogo cuyo annotation github.com/user-id
+            # coincida con su ID inmutable de GitHub. El nombre de usuario no sirve para entrar.
+            - resolver: userIdMatchingUserEntityAnnotation
+
+catalog:
+  # Las rutas son relativas al directorio de trabajo del contenedor (/app)
+  locations:
+    - type: file
+      target: ./catalog/org.yaml
+      rules:
+        - allow: [User, Group]
+    - type: file
+      target: ./catalog/entities.yaml

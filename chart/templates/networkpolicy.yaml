@@ -1,0 +1,46 @@
+{{- if .Values.networkPolicy.enabled }}
+# Todo lo que entra al namespace queda denegado salvo lo que se abre aquí
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+# Traefik (ingress) -> Backstage
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-backstage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: backstage
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressNamespace }}
+      ports:
+        - port: 7007
+---
+# Solo Backstage puede hablar con PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backstage-to-postgres
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: backstage-postgres
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: backstage
+      ports:
+        - port: 5432
+{{- end }}

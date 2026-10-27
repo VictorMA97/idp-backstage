@@ -1,0 +1,22 @@
+# Personas y equipos. Solo los User listados aquí pueden iniciar sesión.
+#
+# IMPORTANTE: sustituye __GITHUB_NODE_ID__ por tu node_id de GitHub:
+#   gh api users/<tu-usuario> --jq .node_id
+# Sin esa coincidencia el login falla con "unable to resolve user identity".
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-team
+  description: Equipo de plataforma
+spec:
+  type: team
+  children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: victorma97
+  annotations:
+    github.com/user-id: __GITHUB_NODE_ID__
+spec:
+  memberOf: [platform-team]

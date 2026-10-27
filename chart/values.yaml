@@ -1,0 +1,60 @@
+image:
+  # El pipeline de CI reescribe repository, tag y digest en values-mgmt.yaml
+  repository: ghcr.io/OWNER/idp-backstage
+  tag: ""
+  # Si se informa, la imagen se referencia por digest (inmutable) además del tag
+  digest: ""
+  pullPolicy: IfNotPresent
+
+# URL pública del portal: debe coincidir con la que usa el navegador y con la callback de la OAuth App
+baseUrl: http://backstage.localtest.me:8080
+
+# Secret con las credenciales (lo crea `make backstage-secrets`; NO está en git).
+# Claves: POSTGRES_PASSWORD, BACKEND_SECRET, AUTH_GITHUB_CLIENT_ID, AUTH_GITHUB_CLIENT_SECRET, GITHUB_TOKEN
+secretName: backstage-secrets
+
+ingress:
+  enabled: true
+  className: traefik
+  host: backstage.localtest.me
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+
+# Cumple el perfil "restricted" de Pod Security. El usuario "node" de la imagen es el 1000.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+postgres:
+  # Etiqueta móvil: para fijarla, sustitúyela por el digest de la versión que uses
+  image: postgres:17-alpine
+  storage: 2Gi
+  # Usuario "postgres" de la imagen alpine
+  runAsUser: 70
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+networkPolicy:
+  enabled: true
+  # Namespace del controlador de ingress (Traefik en k3s vive en kube-system)
+  ingressNamespace: kube-system

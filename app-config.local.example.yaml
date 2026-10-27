@@ -1,0 +1,14 @@
+# Para desarrollo local: copia este fichero a app-config.local.yaml (está en .gitignore).
+# Crea una OAuth App de GitHub con:
+#   Homepage URL:  http://localhost:3000
+#   Callback URL:  http://localhost:7007/api/auth/github/handler/frame
+auth:
+  environment: development
+  providers:
+    github:
+      development:
+        clientId: TU_CLIENT_ID
+        clientSecret: TU_CLIENT_SECRET
+        signIn:
+          resolvers:
+            - resolver: userIdMatchingUserEntityAnnotation
