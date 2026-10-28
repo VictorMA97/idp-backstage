@@ -125,25 +125,16 @@ spec:
         update: true
         token: ${{ secrets.USER_OAUTH_TOKEN }}
 
-    - id: register
-      name: Registrar el componente en el catálogo
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
-
   output:
     links:
       - title: Repositorio del servicio
         url: ${{ steps['publish'].output.remoteUrl }}
       - title: Pull request en idp-platform
         url: ${{ steps['register-in-platform'].output.remoteUrl }}
-      - title: Abrir en el catálogo
-        icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
     text:
       - title: Siguientes pasos
         content: |
+          0. El servicio aparecerá solo en el catálogo en unos 5 minutos (descubrimiento automático de repos `svc-*`).
           1. Espera a que el workflow **ci** del nuevo repositorio termine en verde (publica la primera imagen).
           2. En GitHub: tu perfil, *Packages*, el paquete del servicio, *Package settings*, **Change visibility: Public**.
              Sin esto el clúster no puede descargar la imagen.
