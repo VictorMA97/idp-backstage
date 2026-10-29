@@ -199,22 +199,6 @@ catalog:
       rules:
         - allow: [Template]
 
-  # Descubrimiento automático: todos los repos svc-* de la cuenta que tengan catalog-info.yaml en la raíz
-  # se registran solos (y desaparecen si se borran). Es la fuente de verdad: así el catálogo se reconstruye
-  # aunque se pierda la base de datos. Usa el token de integrations.github (solo lectura).
-  providers:
-    github:
-      servicios:
-        organization: VictorMA97   # también vale para cuentas personales
-        catalogPath: /catalog-info.yaml
-        validateLocationsExist: true
-        filters:
-          repository: '^svc-[a-z0-9-]+$'
-          visibility: [public]
-        schedule:
-          frequency: { minutes: 5 }
-          timeout: { minutes: 3 }
-
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
 
@@ -227,3 +211,15 @@ permission:
 mcpActions:
   name: 'My Company Backstage' # defaults to "backstage"
   description: 'Tools for managing your software catalog, creating new services from templates, and exploring your developer portal' # optional
+
+# Descubrimiento automático de servicios: todos los repos públicos svc-* de la cuenta que tengan
+# catalog-info.yaml en la raíz se registran solos y desaparecen si se borran. Es la fuente de verdad:
+# el catálogo se reconstruye aunque se pierda la base de datos. Usa el token de integrations.github
+# (solo lectura de repos públicos). Código: packages/backend/src/modules/serviceDiscovery.ts
+idp:
+  serviceDiscovery:
+    owner: VictorMA97
+    repositoryPattern: '^svc-[a-z0-9-]+$'
+    schedule:
+      frequency: { minutes: 5 }
+      timeout: { minutes: 3 }

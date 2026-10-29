@@ -34,8 +34,8 @@ backend.add(import('@backstage/plugin-catalog-backend'));
 backend.add(
   import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'),
 );
-// Descubre los repos svc-* de la cuenta (ver catalog.providers.github en app-config.yaml)
-backend.add(import('@backstage/plugin-catalog-backend-module-github'));
+// Descubre los repos svc-* de la cuenta (ver idp.serviceDiscovery en app-config.yaml)
+backend.add(import('./modules/serviceDiscovery'));
 
 // See https://backstage.io/docs/features/software-catalog/configuration#subscribing-to-catalog-errors
 backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
