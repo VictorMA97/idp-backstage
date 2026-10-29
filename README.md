@@ -21,6 +21,9 @@ PostgreSQL. Se despliega en el clúster `mgmt` por GitOps (Argo CD).
 Solo GitHub. Entra quien tenga un `User` en `catalog/org.yaml` con la anotación
 `github.com/user-id` igual a su `node_id` de GitHub (`gh api users/<usuario> --jq .node_id`).
 
+`./scripts/set-owner.sh <usuario>` configura todo lo que depende de tu cuenta (descubrimiento de `svc-*`, catálogo,
+plantilla) y escribe tu `node_id`. Haz commit y push después; el CI reconstruye la imagen.
+
 ## Desarrollo local
 
 ```bash
@@ -41,4 +44,4 @@ se firma de forma keyless y se despliega por digest. El pipeline es el mismo que
 
 ## Empezar de cero
 
-`./scripts/rollback.sh` deja el repo como la plantilla: vacía `image.tag/digest` en `chart/values-mgmt.yaml` (los escribe el CI) y restaura `__GITHUB_NODE_ID__` en `catalog/org.yaml`. Muestra el plan y pide confirmación (`FORCE=1` para no preguntar, `DRY_RUN=1` para solo ver). No hace commit ni push, y no toca GHCR. Luego, al volver a hacer push, el CI reconstruye y vuelve a escribir tag/digest; recuerda poner de nuevo tu node_id.
+`./scripts/rollback.sh` deja el repo como la plantilla: vacía `image.tag/digest` en `chart/values-mgmt.yaml` (los escribe el CI) y restaura `__GITHUB_NODE_ID__` en `catalog/org.yaml` (tu cuenta se queda; vuelve a ejecutar `set-owner.sh`). Muestra el plan y pide confirmación (`FORCE=1` para no preguntar, `DRY_RUN=1` para solo ver). No hace commit ni push, y no toca GHCR. Luego, al volver a hacer push, el CI reconstruye y vuelve a escribir tag/digest; recuerda poner de nuevo tu node_id.
