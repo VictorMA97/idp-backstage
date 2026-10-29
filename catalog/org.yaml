@@ -15,7 +15,7 @@ spec:
 apiVersion: backstage.io/v1alpha1
 kind: User
 metadata:
-  name: victorma97
+  name: <usuario>
   annotations:
     github.com/user-id: __GITHUB_NODE_ID__
 spec:

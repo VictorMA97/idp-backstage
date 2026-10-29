@@ -13,9 +13,9 @@ metadata:
   name: idp-platform
   description: Infraestructura como código de la plataforma (k3d, Argo CD, Kyverno, políticas)
   annotations:
-    github.com/project-slug: victorma97/idp-platform
+    github.com/project-slug: <usuario>/idp-platform
   links:
-    - url: https://github.com/victorma97/idp-platform
+    - url: https://github.com/<usuario>/idp-platform
       title: Repositorio
 spec:
   type: service
@@ -29,9 +29,9 @@ metadata:
   name: idp-backstage
   description: Este portal (Backstage)
   annotations:
-    github.com/project-slug: victorma97/idp-backstage
+    github.com/project-slug: <usuario>/idp-backstage
   links:
-    - url: https://github.com/victorma97/idp-backstage
+    - url: https://github.com/<usuario>/idp-backstage
       title: Repositorio
 spec:
   type: website

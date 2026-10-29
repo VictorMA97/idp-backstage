@@ -11,7 +11,8 @@ log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[!]\033[0m %s\n' "$*" >&2; }
 
 NEW="${1:-}"
-[[ "$NEW" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$ ]] || die "Uso: ./scripts/set-owner.sh <usuario-de-github>"
+# "<usuario>" es el placeholder de la plantilla (lo usa scripts/rollback.sh)
+[[ "$NEW" == "<usuario>" || "$NEW" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$ ]] || die "Uso: ./scripts/set-owner.sh <usuario-de-github>"
 NEW_LC="$(echo "$NEW" | tr '[:upper:]' '[:lower:]')"
 
 CUR="$(awk '/^idp:/{a=1} a && /serviceDiscovery:/{b=1} b && /^[[:space:]]+owner:/{print $2; exit}' app-config.yaml)"
@@ -21,13 +22,19 @@ CUR_LC="$(echo "$CUR" | tr '[:upper:]' '[:lower:]')"
 if [[ "$CUR" != "$NEW" ]]; then
   sed -i -E "/serviceDiscovery:/,/repositoryPattern/ s#^([[:space:]]+owner:[[:space:]]*)${CUR}#\1${NEW}#" app-config.yaml
   for f in catalog/entities.yaml catalog/optional/idp-sample-app.yaml; do
-    [[ -f "$f" ]] && sed -i -E "s#\b${CUR}/#${NEW}/#g" "$f"
+    [[ -f "$f" ]] && sed -i -E "s#(^|[^A-Za-z0-9_-])${CUR}/#\1${NEW}/#g" "$f"
   done
   sed -i -E "s#^([[:space:]]+- )${CUR}[[:space:]]*\$#\1${NEW}#" catalog/templates/python-service/template.yaml
   sed -i -E "s#^([[:space:]]+name: )${CUR_LC}[[:space:]]*\$#\1${NEW_LC}#" catalog/org.yaml
   log "Cuenta cambiada: $CUR -> $NEW"
 else
   log "La cuenta ya es $NEW."
+fi
+
+if [[ "$NEW" == "<usuario>" ]]; then
+  sed -i -E "s#(github.com/user-id:).*#\1 __GITHUB_NODE_ID__#" catalog/org.yaml
+  log "Restaurado el placeholder __GITHUB_NODE_ID__"
+  exit 0
 fi
 
 # node_id: identificador inmutable de GitHub; es lo que compara el login con catalog/org.yaml

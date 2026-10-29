@@ -15,6 +15,9 @@ for f in "${VALUES[@]}"; do
 done
 if [ -f catalog/org.yaml ] && grep -qE 'github.com/user-id: *[^ _#]' catalog/org.yaml; then todo+=("nodeid:catalog/org.yaml"); fi
 
+OWNER_NOW="$(awk '/^idp:/{a=1} a && /serviceDiscovery:/{b=1} b && /^[[:space:]]+owner:/{print $2; exit}' app-config.yaml 2>/dev/null || true)"
+if [ -n "$OWNER_NOW" ] && [ "$OWNER_NOW" != "<usuario>" ]; then todo+=("owner:cuenta de GitHub $OWNER_NOW -> <usuario> (app-config, catálogo, plantilla)"); fi
+
 if [ ${#todo[@]} -eq 0 ]; then echo "Nada que revertir: idp-backstage ya está como la plantilla."; exit 0; fi
 
 echo "Se revertirá:"
@@ -27,10 +30,12 @@ fi
 for t in "${todo[@]}"; do
   case "$t" in
     values:*) f="${t#values:}"; { awk '/^image:/{exit} {print}' "$f"; printf '%s\n' "$BASE"; } > "$f.tmp" && mv "$f.tmp" "$f" ;;
+    owner:*) ./scripts/set-owner.sh '<usuario>' >/dev/null ;;
     nodeid:*) sed -i -E 's|(github.com/user-id:) *[^ #]+|\1 __GITHUB_NODE_ID__|' catalog/org.yaml ;;
   esac
 done
 echo
 echo "Hecho. Para subirlo a git:"
 echo "  git add -A && git commit -m 'chore: volver a la plantilla' && git push"
+echo "Tras empezar de cero, ejecuta de nuevo ./scripts/set-owner.sh <tu-usuario> (cuenta y node_id) antes del push."
 echo "Nota: el push a main/master dispara el CI y volverá a escribir tag/digest."

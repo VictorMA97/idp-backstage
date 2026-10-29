@@ -221,7 +221,7 @@ mcpActions:
 # (solo lectura de repos públicos). Código: packages/backend/src/modules/serviceDiscovery.ts
 idp:
   serviceDiscovery:
-    owner: victorma97
+    owner: <usuario>
     repositoryPattern: '^svc-[a-z0-9-]+$'
     schedule:
       frequency: { minutes: 5 }

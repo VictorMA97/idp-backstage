@@ -44,4 +44,4 @@ se firma de forma keyless y se despliega por digest. El pipeline es el mismo que
 
 ## Empezar de cero
 
-`./scripts/rollback.sh` deja el repo como la plantilla: vacía `image.tag/digest` en `chart/values-mgmt.yaml` (los escribe el CI) y restaura `__GITHUB_NODE_ID__` en `catalog/org.yaml` (tu cuenta se queda; vuelve a ejecutar `set-owner.sh`). Muestra el plan y pide confirmación (`FORCE=1` para no preguntar, `DRY_RUN=1` para solo ver). No hace commit ni push, y no toca GHCR. Luego, al volver a hacer push, el CI reconstruye y vuelve a escribir tag/digest; recuerda poner de nuevo tu node_id.
+`./scripts/rollback.sh` deja el repo como la plantilla: vacía `image.tag/digest` en `chart/values-mgmt.yaml` (los escribe el CI) y restaura `__GITHUB_NODE_ID__` en `catalog/org.yaml` y deja tu cuenta como `<usuario>` en `app-config.yaml`, el catálogo y la plantilla. Muestra el plan y pide confirmación (`FORCE=1` para no preguntar, `DRY_RUN=1` para solo ver). No hace commit ni push, y no toca GHCR. Luego, al volver a hacer push, el CI reconstruye y vuelve a escribir tag/digest; antes de ese push vuelve a ejecutar `./scripts/set-owner.sh <tu-usuario>` (cuenta y node_id).
