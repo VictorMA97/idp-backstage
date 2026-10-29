@@ -1,0 +1,21 @@
+# OPCIONAL: solo si usas la app de ejemplo (repo idp-sample-app). La plataforma no depende de ella.
+# Para registrarla, descomenta su location en app-config.yaml (catalog.locations).
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: idp-sample-app
+  description: Servicio de ejemplo (golden path en Python) desplegado en dev y prod
+  annotations:
+    github.com/project-slug: VictorMA97/idp-sample-app
+  links:
+    - url: https://github.com/VictorMA97/idp-sample-app
+      title: Repositorio
+    - url: http://sample-app.dev.localtest.me:8081
+      title: dev
+    - url: http://sample-app.prod.localtest.me:8082
+      title: prod
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: idp

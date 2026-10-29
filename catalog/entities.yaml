@@ -50,23 +50,3 @@ spec:
   type: database
   owner: platform-team
   system: idp
----
-apiVersion: backstage.io/v1alpha1
-kind: Component
-metadata:
-  name: idp-sample-app
-  description: Servicio de ejemplo (golden path en Python) desplegado en dev y prod
-  annotations:
-    github.com/project-slug: VictorMA97/idp-sample-app
-  links:
-    - url: https://github.com/VictorMA97/idp-sample-app
-      title: Repositorio
-    - url: http://sample-app.dev.localtest.me:8081
-      title: dev
-    - url: http://sample-app.prod.localtest.me:8082
-      title: prod
-spec:
-  type: service
-  lifecycle: production
-  owner: platform-team
-  system: idp

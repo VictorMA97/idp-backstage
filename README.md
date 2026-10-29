@@ -37,7 +37,7 @@ Los pasos completos (OAuth App, secretos, Argo CD) están en `docs/backstage.md`
 ## Seguridad del pipeline
 
 Las acciones van fijadas por SHA de commit, los jobs tienen permisos mínimos y separados, la imagen
-se firma de forma keyless y se despliega por digest. Detalles en el README de `idp-sample-app`.
+se firma de forma keyless y se despliega por digest. El pipeline es el mismo que usa, de forma opcional, la app de ejemplo `idp-sample-app`.
 
 ## Empezar de cero
 
