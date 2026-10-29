@@ -1,3 +1,4 @@
 image:
   tag: ""
   digest: ""
+  repository: ghcr.io/victorma97/idp-backstage
