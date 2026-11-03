@@ -1,4 +1,4 @@
 image:
-  tag: "sha-2d16364"
-  digest: "sha256:631f0fc45541416bffc1c9be7bac856b51730cf41902db97b39a94e31d97da9d"
+  tag: "sha-4a82507"
+  digest: "sha256:b93a7ef92201b22566867ea14a8b0c3f083800c7654c57db1c0990f89fa14fe3"
   repository: ghcr.io/victorma97/idp-backstage
