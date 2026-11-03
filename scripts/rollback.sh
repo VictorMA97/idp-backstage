@@ -3,7 +3,7 @@
 # No hace commit ni push; no toca GHCR ni GitHub. Variables: FORCE=1 (sin preguntar), DRY_RUN=1 (solo muestra).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
-[ -d .git ] || { echo "Ejecútalo dentro del repo idp-backstage: ./scripts/rollback.sh"; exit 1; }
+[ -e .git ] || { echo "Ejecútalo dentro del repo idp-backstage: ./scripts/rollback.sh"; exit 1; }
 
 VALUES=(chart/values-mgmt.yaml)
 BASE=$'image:\n  tag: ""\n  digest: ""'
