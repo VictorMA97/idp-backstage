@@ -6,9 +6,9 @@ metadata:
   name: idp-sample-app
   description: Servicio de ejemplo (golden path en Python) desplegado en dev y prod
   annotations:
-    github.com/project-slug: VictorMA97/idp-sample-app
+    github.com/project-slug: <usuario>/idp-sample-app
   links:
-    - url: https://github.com/VictorMA97/idp-sample-app
+    - url: https://github.com/<usuario>/idp-sample-app
       title: Repositorio
     - url: http://sample-app.dev.localtest.me:8081
       title: dev

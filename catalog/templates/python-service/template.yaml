@@ -34,7 +34,7 @@ spec:
             allowedHosts:
               - github.com
             allowedOwners:
-              - VictorMA97
+              - <usuario>
             # Se usa TU token de GitHub (no uno guardado en el clúster). Backstage te pedirá
             # autorizar estos permisos la primera vez.
             requestUserCredentials:
